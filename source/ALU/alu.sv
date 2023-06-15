@@ -19,6 +19,7 @@ parameter OR  =  3;
 parameter XOR =  4;
 parameter SHL =  5;
 parameter SHR =  6;
+parameter INC =  7;
 
 //inter vars
 logic [7:0] y;
@@ -47,6 +48,11 @@ always_comb begin : ALU_6502
         XOR: y = A ^ B;
         SHL: {C,Y} = {1'b0,A} << 1;
         SHR: {Y,C} = {A,1'b0} >> 1;
+        INC: begin
+            y = A + 1;
+            C = Y < A;
+            V = (A[7] == 1'b0) && (y[7] == 1'b1); // 1 if MSB of A is 0 and MSB of Y is 1
+        end
         default: y = 0;
         endcase
     
