@@ -19,6 +19,7 @@ parameter OR  =  3;
 parameter XOR =  4;
 parameter SHL =  5;
 parameter SHR =  6;
+parameter INC =  7;
 
 //inter vars
 logic [7:0] y;
@@ -32,19 +33,32 @@ always_comb begin : ALU_6502
     V = 0; // Overflow false
 
     case(OP)
-        ADD:begin y = A + B ; 
-        SUB: y = A - B;
+        ADD:begin 
+            y = A + B ; 
+            C = Y < A | Y < B;
+            V = (A[7] == B[7]) && (A[7] != y[7]); // 1 if MSB of A and B are equal and MSB of Y is different
+        end
+        SUB: begin
+            y = A - B;
+            C = A < B;
+            V = (A[7] != B[7]) && (A[7] != y[7]); // 1 if MSB of A and B are different and MSB of Y is different
+        end
         AND: y = A & B;
         OR:  y = A | B;
         XOR: y = A ^ B;
-        SHL: y = A << 1;
-        SHR: y = A >> 1;
+        SHL: {C,Y} = {1'b0,A} << 1;
+        SHR: {Y,C} = {A,1'b0} >> 1;
+        INC: begin
+            y = A + 1;
+            C = Y < A;
+            V = (A[7] == 1'b0) && (y[7] == 1'b1); // 1 if MSB of A is 0 and MSB of Y is 1
+        end
         default: y = 0;
         endcase
     
     // Set flags
-    Z = ~(|y);  // 1 if all bits are 0
-    N = y[7];   // 1 if MSB is 1
+    Z = ~(|Y);  // 1 if all bits are 0
+    N = Y[7];   // 1 if MSB is 1
     V = (A[7] == B[7]) && (A[7] != y[7]); // 1 if MSB of A and B are equal and MSB of Y is different
     Y = y;      // Output
 end
